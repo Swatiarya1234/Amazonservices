@@ -1,6 +1,7 @@
 package com.example.loginapplication
 
 import android.os.Bundle
+import android.util.Log
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
@@ -9,13 +10,17 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import android.view.Menu
 import android.view.MenuItem
-import com.amplifyframework.auth.AuthProvider.amazon
+import com.amplifyframework.AmplifyException
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.datastore.AWSDataStorePlugin
+import com.amplifyframework.datastore.generated.model.Todo
 import com.example.loginapplication.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
+    
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,9 +38,29 @@ class MainActivity : AppCompatActivity() {
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show()
         }
+        try {
+            //Amplify.addPlugin(AWSApiPlugin()) // UNCOMMENT this line once backend is deployed
+            Amplify.addPlugin(AWSDataStorePlugin())
+            Amplify.configure(applicationContext)
+            Log.i("Amplify", "Initialized Amplify")
+        } catch (e: AmplifyException) {
+            Log.e("Amplify", "Could not initialize Amplify", e)
+        }
+        getapplication()
 
 
+    }
 
+    private fun getapplication() {
+        val item: Todo = Todo.builder()
+            .name("Lorem ipsum dolor sit amet")
+            .description("Lorem ipsum dolor sit amet")
+            .build()
+        Amplify.DataStore.save(
+            item,
+            { success -> Log.i("Amplify", "Saved item: " + success.item().name) },
+            { error -> Log.e("Amplify", "Could not save item to DataStore", error) }
+        )
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -59,5 +84,6 @@ class MainActivity : AppCompatActivity() {
         return navController.navigateUp(appBarConfiguration)
                 || super.onSupportNavigateUp()
     }
+
 
 }
